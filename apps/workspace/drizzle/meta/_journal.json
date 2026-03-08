@@ -36,6 +36,13 @@
       "when": 1772991700000,
       "tag": "0004_instances_and_universal_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1772991800000,
+      "tag": "0005_instance_users_and_projects",
+      "breakpoints": true
     }
   ]
 }

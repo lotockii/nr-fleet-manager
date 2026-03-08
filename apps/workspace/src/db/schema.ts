@@ -174,7 +174,9 @@ export const instanceUsers = pgTable('instance_users', {
   role:        text('role').notNull().default('read-only'),
   permissions: jsonb('permissions').$type<string[]>().default([]),
   syncedAt:    timestamp('synced_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  instanceUsernameUnique: uniqueIndex('instance_users_instance_username_idx').on(table.instanceId, table.username),
+}));
 
 // ─── Instance Projects Cache ──────────────────────────────────────────────────
 
