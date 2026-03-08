@@ -44,7 +44,8 @@ install_docker() {
 if ! command -v docker >/dev/null 2>&1; then
   warn "Docker is not installed."
   echo -e "  Install it now? (runs official script: get.docker.com) [y/N]: \c"
-  read -r INSTALL_DOCKER
+  # When run as curl|bash, stdin is the pipe; read from terminal so user can answer
+  if [ -e /dev/tty ]; then read -r INSTALL_DOCKER < /dev/tty; else read -r INSTALL_DOCKER || true; fi
   if [[ "${INSTALL_DOCKER:-n}" =~ ^[yY] ]]; then
     install_docker
   else
@@ -140,7 +141,7 @@ echo -e "${BOLD}[ 3/5 ] HTTPS / SSL (optional)${NC}"
 echo -e "  If you have a domain pointing to this server, we can set up"
 echo -e "  a free SSL certificate automatically via Let's Encrypt."
 echo ""
-read -rp "  Enter your domain (e.g. fleet.example.com) or press Enter to skip: " SSL_DOMAIN
+if [ -e /dev/tty ]; then read -rp "  Enter your domain (e.g. fleet.example.com) or press Enter to skip: " SSL_DOMAIN < /dev/tty; else read -rp "  Enter your domain (e.g. fleet.example.com) or press Enter to skip: " SSL_DOMAIN || true; fi
 
 HTTPS_ENABLED=false
 
