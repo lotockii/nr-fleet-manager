@@ -48,8 +48,9 @@ if ! command -v docker >/dev/null 2>&1; then
   warn "Docker is not installed."
   if [ -t 0 ] && [ -e /dev/tty ]; then
     echo -e "  Install it now? (runs official script: get.docker.com) [y/N]: \c"
-    read -r INSTALL_DOCKER
-    if [[ "${INSTALL_DOCKER:-n}" =~ ^[yY] ]]; then
+    read -r INSTALL_DOCKER </dev/tty
+    INSTALL_DOCKER="${INSTALL_DOCKER:-n}"
+    if [[ "$INSTALL_DOCKER" =~ ^[yY] ]]; then
       install_docker
       DOCKER_CMD="sudo "
     else
