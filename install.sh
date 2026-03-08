@@ -21,11 +21,6 @@ echo "  ╚═╝  ╚═══╝╚═╝  ╚═╝    ╚═╝     ╚═�
 echo -e "${NC}${BOLD}                   Node-RED Fleet Manager${NC}"
 echo ""
 
-# When run as curl|bash, stdin is the pipe; switch to terminal for prompts
-if [ ! -t 0 ] && [ -e /dev/tty ]; then
-  exec 0</dev/tty
-fi
-
 # ── Check dependencies ────────────────────────────────────────────────────────
 echo -e "${BOLD}[ 1/4 ] Checking dependencies...${NC}"
 
@@ -48,12 +43,18 @@ install_docker() {
 
 if ! command -v docker >/dev/null 2>&1; then
   warn "Docker is not installed."
-  echo -e "  Install it now? (runs official script: get.docker.com) [y/N]: \c"
-  read -r INSTALL_DOCKER
-  if [[ "${INSTALL_DOCKER:-n}" =~ ^[yY] ]]; then
-    install_docker
+  if [ -t 0 ] && [ -e /dev/tty ]; then
+    echo -e "  Install it now? (runs official script: get.docker.com) [y/N]: \c"
+    read -r INSTALL_DOCKER
+    if [[ "${INSTALL_DOCKER:-n}" =~ ^[yY] ]]; then
+      install_docker
+    else
+      error "Docker is required. Install it manually: https://docs.docker.com/get-docker/"
+    fi
   else
-    error "Docker is required. Install it manually: https://docs.docker.com/get-docker/"
+    echo -e "${RED}✗ ERROR:${NC} Docker is required. Download the script and run it so you can answer prompts:" >&2
+    echo "  curl -fsSL https://raw.githubusercontent.com/lotockii/nr-fleet-manager/main/install.sh -o install.sh && bash install.sh" >&2
+    exit 1
   fi
 fi
 

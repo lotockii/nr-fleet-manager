@@ -37,20 +37,10 @@ Then restart Node-RED, add a **Fleet Agent** node to your flow and configure:
 
 ## Quick Start (Docker)
 
-**Option 1 — one-liner (downloads script, clones repo, then runs installer):**
+Download the install script and run it (the script will clone the repo into `./nr-fleet-manager` if needed):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/lotockii/nr-fleet-manager/main/install.sh | bash
-```
-
-This clones the repo into `./nr-fleet-manager` in the current directory, then runs the installer there.
-
-**Option 2 — clone repo, then run installer:**
-
-```bash
-git clone https://github.com/lotockii/nr-fleet-manager.git
-cd nr-fleet-manager
-bash install.sh
+curl -fsSL https://raw.githubusercontent.com/lotockii/nr-fleet-manager/main/install.sh -o install.sh && bash install.sh
 ```
 
 The installer will:
