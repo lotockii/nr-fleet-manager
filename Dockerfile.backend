@@ -1,0 +1,47 @@
+# ── Stage 1: Builder ──────────────────────────────────────────────────────────
+FROM node:22-alpine AS builder
+WORKDIR /app
+
+RUN npm install -g pnpm@9
+
+# Copy workspace config and lockfile
+COPY pnpm-workspace.yaml package.json tsconfig.base.json ./
+COPY pnpm-lock.yaml* ./
+
+# Copy source packages
+COPY packages/shared-types/ ./packages/shared-types/
+COPY apps/workspace/ ./apps/workspace/
+
+# Install all dependencies
+RUN pnpm install --frozen-lockfile 2>/dev/null || pnpm install
+
+# Build shared-types first, then backend
+RUN pnpm --filter shared-types build
+RUN pnpm --filter workspace build
+
+# ── Stage 2: Runtime ──────────────────────────────────────────────────────────
+FROM node:22-alpine AS runtime
+WORKDIR /app
+
+RUN npm install -g pnpm@9
+
+# Copy workspace manifests
+COPY pnpm-workspace.yaml package.json ./
+COPY pnpm-lock.yaml* ./
+
+# Copy built artifacts
+COPY --from=builder /app/packages/shared-types/package.json ./packages/shared-types/package.json
+COPY --from=builder /app/packages/shared-types/dist ./packages/shared-types/dist
+COPY --from=builder /app/apps/workspace/package.json ./apps/workspace/package.json
+COPY --from=builder /app/apps/workspace/dist ./apps/workspace/dist
+
+# Copy DB migrations (needed at runtime for migrate())
+COPY --from=builder /app/apps/workspace/drizzle ./apps/workspace/drizzle
+
+# Install only production dependencies
+RUN pnpm install --frozen-lockfile --prod 2>/dev/null || pnpm install --prod
+
+WORKDIR /app/apps/workspace
+
+EXPOSE 3001
+CMD ["node", "dist/index.js"]

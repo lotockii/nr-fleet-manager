@@ -1,0 +1,74 @@
+services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${DB_NAME:-nr_fleet}
+      POSTGRES_USER:     ${DB_USER:-nr_fleet}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-nr_fleet} -d ${DB_NAME:-nr_fleet}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    networks:
+      - nr-fleet
+
+  # ── Backend ─────────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL:     postgresql://${DB_USER:-nr_fleet}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-nr_fleet}
+      JWT_SECRET:       ${JWT_SECRET:?JWT_SECRET is required in .env}
+      ADMIN_EMAIL:      ${ADMIN_EMAIL:-admin@localhost}
+      ADMIN_PASSWORD:   ${ADMIN_PASSWORD:-admin123}
+      ALLOWED_ORIGINS:  ${ALLOWED_ORIGINS:-*}
+      PORT:             3001
+      HOST:             0.0.0.0
+      NODE_ENV:         ${NODE_ENV:-production}
+    volumes:
+      - app_data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health 2>&1 | grep -q ok && exit 0 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - nr-fleet
+
+  # ── Frontend ────────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    restart: unless-stopped
+    ports:
+      - "${PORT:-80}:80"
+    depends_on:
+      backend:
+        condition: service_started
+    networks:
+      - nr-fleet
+
+# ── Volumes & Networks ────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+    driver: local
+  app_data:
+    driver: local
+
+networks:
+  nr-fleet:
+    driver: bridge

@@ -1,0 +1,23 @@
+{
+  "name": "nodered-fleet",
+  "private": true,
+  "version": "0.1.0",
+  "description": "NodeRed Fleet Manager — centralized platform for managing multiple Node-RED instances",
+  "scripts": {
+    "dev": "pnpm --parallel -r dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  }
+}
