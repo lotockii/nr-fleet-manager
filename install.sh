@@ -312,7 +312,7 @@ echo -e "${BOLD}[ 5/5 ] Waiting for services...${NC}"
 # Load PORT from .env
 PORT_VAL=$(grep '^PORT=' .env 2>/dev/null | cut -d= -f2 || echo "80")
 
-MAX_WAIT=180
+MAX_WAIT=300
 WAITED=0
 printf "  Checking backend"
 until curl -sf "http://localhost:${PORT_VAL}/api/auth/login" \
@@ -321,14 +321,14 @@ until curl -sf "http://localhost:${PORT_VAL}/api/auth/login" \
     -o /dev/null 2>&1; do
   if [ $WAITED -ge $MAX_WAIT ]; then
     echo ""
-    warn "Backend didn't respond in ${MAX_WAIT}s (first run can be slow: migrations, seed)."
-    warn "Check: cd nr-fleet-manager && docker compose logs backend"
-    warn "Then try the URL in a minute — the app may still be starting."
+    warn "Backend didn't respond in ${MAX_WAIT}s."
+    warn "First run can take 5+ min (build, migrations, seed). Check: cd nr-fleet-manager && sudo docker compose logs -f backend"
+    warn "Then try the URL in 1–2 minutes; if it still fails, see logs for errors."
     break
   fi
   printf "."
-  sleep 3
-  WAITED=$((WAITED + 3))
+  sleep 5
+  WAITED=$((WAITED + 5))
 done
 echo ""
 
