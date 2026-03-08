@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Radio } from 'lucide-react';
+import logoUrl from '@/assets/logo.png';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
 import { Button } from '@/components/ui/button';
@@ -38,8 +38,10 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-950">
       <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 p-8 shadow-lg dark:border dark:border-gray-700">
         <div className="mb-8 flex flex-col items-center gap-2">
-          <Radio className="h-10 w-10 text-red-500" />
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">NR Fleet Manager</h1>
+          <div className="flex items-center gap-2">
+            <img src={logoUrl} alt="NR Fleet" className="h-10 w-10 rounded" />
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">NR Fleet</h1>
+          </div>
           <p className="text-sm text-gray-500 dark:text-gray-400">Sign in to your account</p>
         </div>
 

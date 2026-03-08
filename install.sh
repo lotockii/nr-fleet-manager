@@ -315,15 +315,14 @@ PORT_VAL=$(grep '^PORT=' .env 2>/dev/null | cut -d= -f2 || echo "80")
 MAX_WAIT=300
 WAITED=0
 printf "  Checking backend"
-until curl -sf "http://localhost:${PORT_VAL}/api/auth/login" \
+# Backend is ready when it responds with 200 (OK) or 401 (rejects bad credentials); curl -f treats 401 as failure, so we check status code
+until CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PORT_VAL}/api/auth/login" \
     -X POST -H "Content-Type: application/json" \
-    -d '{"email":"x","password":"x"}' \
-    -o /dev/null 2>&1; do
+    -d '{"email":"x","password":"x"}' 2>/dev/null) && [ "${CODE}" = "200" ] || [ "${CODE}" = "401" ]; do
   if [ $WAITED -ge $MAX_WAIT ]; then
     echo ""
-    warn "Backend didn't respond in ${MAX_WAIT}s."
-    warn "First run can take 5+ min (build, migrations, seed). Check: cd nr-fleet-manager && sudo docker compose logs -f backend"
-    warn "Then try the URL in 1–2 minutes; if it still fails, see logs for errors."
+    warn "Backend did not respond within ${MAX_WAIT}s (common on first run: migrations + seed take time)."
+    warn "Open the URL below in 1–2 minutes; if the page loads, you are all set. Otherwise: cd nr-fleet-manager && sudo docker compose logs -f backend"
     break
   fi
   printf "."
@@ -352,6 +351,7 @@ echo -e "${BOLD}${GREEN}║${NC}  📧 Email:     ${YELLOW}${ADMIN_EMAIL_SHOW}${
 echo -e "${BOLD}${GREEN}║${NC}  🔑 Password:  ${YELLOW}${ADMIN_PASS_SHOW}${NC}"
 echo -e "${BOLD}${GREEN}║${NC}"
 echo -e "${BOLD}${GREEN}║${NC}  ⚠️  ${BOLD}Change password on first login!${NC}"
+echo -e "${BOLD}${GREEN}║${NC}  💡 If the page does not load yet, wait 1–2 min (first run: migrations, seed)."
 echo -e "${BOLD}${GREEN}╠══════════════════════════════════════════════════════╣${NC}"
 echo -e "${BOLD}${GREEN}║${NC}  📋 Credentials also saved to: ${BLUE}.credentials${NC}"
 echo -e "${BOLD}${GREEN}║${NC}"
