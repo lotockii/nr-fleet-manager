@@ -24,6 +24,9 @@ echo ""
 # ── Check dependencies ────────────────────────────────────────────────────────
 echo -e "${BOLD}[ 1/4 ] Checking dependencies...${NC}"
 
+# After installing Docker in this run, use sudo for docker (group not yet active in this session)
+DOCKER_CMD=""
+
 install_docker() {
   info "Running official Docker install script (https://get.docker.com)..."
   if command -v curl >/dev/null 2>&1; then
@@ -48,6 +51,7 @@ if ! command -v docker >/dev/null 2>&1; then
     read -r INSTALL_DOCKER
     if [[ "${INSTALL_DOCKER:-n}" =~ ^[yY] ]]; then
       install_docker
+      DOCKER_CMD="sudo "
     else
       error "Docker is required. Install it manually: https://docs.docker.com/get-docker/"
     fi
@@ -58,18 +62,18 @@ if ! command -v docker >/dev/null 2>&1; then
   fi
 fi
 
-if ! docker compose version >/dev/null 2>&1; then
+if ! ${DOCKER_CMD}docker compose version >/dev/null 2>&1; then
   # After fresh install, Compose plugin may need a new shell or service start
   if command -v systemctl >/dev/null 2>&1; then
     sudo systemctl start docker 2>/dev/null || true
   fi
-  if ! docker compose version >/dev/null 2>&1; then
+  if ! ${DOCKER_CMD}docker compose version >/dev/null 2>&1; then
     error "Docker Compose v2 not found. Install Docker Desktop or docker-compose-plugin: https://docs.docker.com/compose/install/"
   fi
 fi
 
-success "Docker: $(docker --version | grep -oP '\d+\.\d+\.\d+' || docker --version)"
-success "Compose: $(docker compose version --short)"
+success "Docker: $(${DOCKER_CMD}docker --version | grep -oP '\d+\.\d+\.\d+' || ${DOCKER_CMD}docker --version)"
+success "Compose: $(${DOCKER_CMD}docker compose version --short)"
 
 # ── Clone repo if run via curl (no docker-compose in PWD) ───────────────────────
 if [ ! -f docker-compose.yml ]; then
@@ -169,7 +173,7 @@ if [ -n "${SSL_DOMAIN:-}" ]; then
   fi
 
   # Make sure port 80 is free (stop frontend container if running)
-  docker compose stop frontend 2>/dev/null || true
+  ${DOCKER_CMD}docker compose stop frontend 2>/dev/null || true
   sleep 1
 
   # Obtain certificate (standalone mode)
@@ -298,7 +302,7 @@ echo -e "${BOLD}[ 4/5 ] Building and starting containers...${NC}"
 info "This may take 3-5 minutes on first run (downloading images, building)..."
 echo ""
 
-docker compose up -d --build
+${DOCKER_CMD}docker compose up -d --build
 
 # ── Wait for ready ────────────────────────────────────────────────────────────
 echo ""
